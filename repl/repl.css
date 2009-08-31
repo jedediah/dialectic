@@ -1,0 +1,78 @@
+
+body {
+  background-color: black;
+  color: white;
+  margin: 0px;
+}
+
+#canvas {
+  position: absolute;
+  top: 0px;
+  left: 0px;
+  z-index: -1;
+}
+
+.repl .output {
+  margin: 8px;
+  color: white;
+  font-family: monospace;
+  font-size: 12px;
+  height: 95%;
+  overflow: auto
+}
+
+.repl .input {
+  color: white;
+  background-color: #333;
+  border: 0px;
+  margin: 0px;
+  padding: 0px;
+  width: 99%;
+  font-family: monospace;
+  font-size: 12px;
+}
+
+.repl .multiline {
+  color: white;
+  background-color: #333;
+  border: 0px;
+  margin: 0px;
+  padding: 0px;
+  width: 99%;
+  font-family: monospace;
+  font-size: 12px;
+  height: 160px;
+  display: none;
+}
+
+.repl .context {
+  color: #66f;
+  font-size: 10px;
+}
+
+.repl .history { color: white; }
+.repl .inspect { display: block;
+                 color: #88f;
+                 margin: 5px 8px 5px 12px;
+                 cursor: pointer; }
+.repl .undefined { display: block;
+                   color: #448;
+                   margin: 5px 8px 5px 12px;}
+.repl .status { color: #8f8; }
+.repl .error { color: #f88; }
+.repl .error_name { display: block;
+                    background-color: red;
+                    color: white;
+                    font-weight: bold;
+                    padding: 2px;
+                    margin: 8px 0 0 0; }
+.repl .error_message { display: block; font-style: italic; color: #bbb; margin: 8px; }
+.repl .stack_trace { border: 0px; }
+.repl .stack_trace td { padding: 0px 8px 0px 8px; margin: 0; }
+.repl .stack_object { color: #88f; }
+.repl .stack_file { color: #ff8; }
+.repl .stack_line { color: #8f8; }
+
+.repl .property_table { border: 0px; }
+.repl .property_name { color: #ff8; }
+.repl .property_value { color: #888; }
