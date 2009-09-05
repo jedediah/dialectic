@@ -21,8 +21,8 @@ REPL = {
     this._contextStack = [this._global];
     this._inputHistory = [];
     this._displayStyle = 'block';
-    this._eContainer = new Element('div',{id:'repl',class:'repl'});
-    this._eContainer.insert('<pre id="repl_output" class="output"></pre>' +
+    this._eContainer = new Element('div',{id:'repl','class':'repl'});
+    this._eContainer.insert('<div id="repl_output" class="output"></div>' +
                             '<div id="repl_context" class="context"></div>' +
                             '<input id="repl_input" class="input"/>' +
                             '<textarea id="repl_multiline" class="multiline"></textarea>');
@@ -33,13 +33,13 @@ REPL = {
       this._eParent = $(document.body);
 
     this._eParent.insert(this._eContainer);
-    
+
     this._eOutput = $('repl_output');
     this._eContext = $('repl_context');
     this._eInput = $('repl_input');
     this._eMultiline = $('repl_multiline');
 
-    var lisnr = this._onKeyDown.bindAsEventListener(this)
+    var lisnr = this._onKeyDown.bindAsEventListener(this);
     Event.observe(this._eInput,'keydown',lisnr);
     Event.observe(this._eMultiline,'keydown',lisnr);
 
@@ -183,9 +183,10 @@ REPL = {
   printRaw: function(s) {
     return this._eOutput.insert(s);
   },
-  print: function(s,klass) {
+  p: function(s,klass) {
     if (klass) {
-      var e = new Element('span',{class:klass}).update(s.escapeHTML());
+      var e = new Element('div',{'class':klass});
+      e.update(s.escapeHTML());
       this._eOutput.insert(e);
       return e;
     } else {
@@ -194,23 +195,209 @@ REPL = {
     }
   },
   printLine: function(s,klass) {
-    return this.print(s+"\n",klass);
+    return this.p(s,klass); // TODO: probably don't need this method
+  },
+  printScrollable: function(s,klass) {
+    return this.p(s,'scrollable '+klass);
   },
   status: function(s) {
-    return this.printLine(s,'status');
+    return this.p(s,'status');
   },
   error: function(s) {
-    return this.printLine(s,'error');
+    return this.p(s,'error');
   },
   clear: function() {
     this._eOutput.update('');
     this._i.length = 0;
     return {inspect:function(){ return '' }};
   },
+  _selfClosingTags: { area:true,
+                      base:true,
+                      basefont:true,
+                      br:true,
+                      hr:true,
+                      input:true,
+                      img:true,
+                      link:true,
+                      meta:true,
+                      frame:true,
+                      col:true,
+                      param:true },
+  _inspectElement: function(e) {
+    var recur = arguments.callee;
+    switch(e.nodeType) {
+    case document.ELEMENT_NODE: {
+      var sc = this._selfClosingTags[e.tagName.toLowerCase()];
+      return ['&lt;<span class="tag_name">',
+              e.tagName.toLowerCase().escapeHTML(),
+              '</span>',
+              $A(e.attributes).map(recur,this),
+              sc ? '/&gt;' : ['&gt;<span class="tag_body">',
+                              $A(e.childNodes).map(recur,this),
+                              '</span>&lt;/<span class="tag_name">',
+                              e.tagName.toLowerCase().escapeHTML(),
+                              '</span>&gt;']
+              ];
+    }
+
+    case document.ATTRIBUTE_NODE:
+      return [' <span class="attribute_name">',
+              e.name.escapeHTML(),
+              '</span>="<span class="attribute_value">',
+              e.value.escapeHTML(),
+              '</span>"'];
+
+    case document.CDATA_SECTION_NODE:
+    case document.TEXT_NODE:
+      return ['<span class="text">',
+              e.nodeValue.escapeHTML(),
+              '</span>'];
+
+    case document.COMMENT_NODE:
+      return ['<span class="comment">&lt;--',
+              e.nodeValue.escapeHTML(),
+              '--&gt;</span>'];
+
+    case document.DOCUMENT_NODE:
+      return recur(e.documentElement);
+
+    case document.DOCUMENT_FRAGMENT_NODE:
+      return $A(e.childNodes).map(recur,this).flatten();
+
+    case document.PROCESSING_INSTRUCTION_NODE:
+      return ['<span class="processing_instruction">&lt;?',
+              e.target.escapeHTML(),
+              ' ',
+              e.data.escapeHTML(),
+              ' ?&gt;</span>'];
+
+    // case document.ENTITY_REFERENCE_NODE:
+    // case document.ENTITY_NODE:
+    // case document.DOCUMENT_TYPE_NODE:
+    // case document.NOTATION_NODE:
+    }
+    return ['<span class="error">unhandled node type</span>'];
+  },
+
+  _inspectDOM: function(e) {
+    return ['<span class="dom dom_toplevel">',
+            this._inspectElement(e),
+            '</span>'];
+  },
+
+  _inspectObject: function(o) {
+    var a = ['<table class="object_table">'];
+    for (var k in o) {
+      if (!o.constructor || !o.constructor.prototype || !o.constructor.prototype[k]) {
+        a.push('<tr class="object_row"><td class="object_key" valign="top">',
+               k.escapeHTML(),
+               '</td><td class="object_value">',
+               this._inspectStructure(o[k]),
+               '</td></tr>');
+      }
+    }
+    a.push('</table>');
+    return a;
+  },
+
+  _inspectArray: function(o) {
+    var a = ['<span class="array">['];
+    if (o.length != 0) {
+      a.push(this._inspectStructure(o[0]));
+      for (var i = 1; i < o.length; i++) {
+        a.push(', ',this._inspectStructure(o[i]));
+      }
+    }
+    a.push(']</span>');
+    return a;
+  },
+
+  _inspectStructure: function(o) {
+    try {
+      switch (typeof o) {
+      case 'undefined':
+      case 'string':
+      case 'number':
+      case 'function':
+        return ['<span class="'+(typeof o)+'">',
+                Object.inspect(o).escapeHTML(),
+                '</span>'];
+      case 'boolean':
+      case 'object':
+        switch (o) {
+        case true:
+        case false:
+        case null:
+          return ['<span class="'+o+'">'+o+'</span>'];
+        default:
+          if (Object.isElement(o)) {
+            return this._inspectDOM(o);
+          } else if (Object.isArray(o)) {
+            return this._inspectArray(o);
+          } else {
+            return this._inspectObject(o);
+          }
+        }
+      }
+      return ['<span class="error">unknown data type</span>'];
+    } catch(ex) {
+      return this._inspectError(ex);
+    }
+  },
+
+  _inspectError: function(ex) {
+    return ['<span class="error_name">',
+            e.name.escapeHTML(),
+            '</span><span class="error_message">',
+            e.message.escapeHTML(),
+            '</span><table class="stack_trace">',
+            e.stack.split(/\r?\n/).map(function(line) {
+              if (line.match(/\((.*)\)@(.*):([0-9]+)/)) {
+                return ['<tr><td class="stack_line">',
+                        RegExp.$3,
+                        '</td><td class="stack_file">',
+                        RegExp.$2,
+                        '</td><td class="stack_object">',
+                        RegExp.$1,
+                        '</td></tr>'];
+              } else {
+                return ['<tr><td colspan="3" class="stack_misc">',
+                        line,
+                        '</td></tr>'];
+              }
+            }),
+            '</table>'];
+  },
+
+  inspectStructureAsHTML: function(o) {
+    return ['<span class="inspect inspect_toplevel">',
+            this._inspectStructure(o),
+            '</span>'].flatten().join('');
+  },
+
+  inspectStructureAsElement: function(o) {
+    return new Element('span',{'class':'inspect inspect_toplevel'}).update(this._inspectStructure(o).flatten().join(''));
+  },
+
+  _i: [],
+
+  ii: function(o) {
+    this.printRaw(this.inspectStructureAsHTML(o));
+  },
+
   i: function(o) {
-    if (typeof o == 'undefined') {
+    switch (typeof o) {
+    case 'undefined':
       this.printLine('undefined','undefined');
-    } else {
+      break;
+    case 'object':
+      if (o == null) {
+        this.printLine('null','inspect');
+      } else {
+        this.printScrollable(o.toSource().replace(/^\(|\)$/g,''),'inspect');
+      }
+      break;
+    default:
       this._ = o;
       var n = this._i.length;
       this._i.push(o);
@@ -219,47 +406,35 @@ REPL = {
         REPL._eInput.value += "_i["+n+"]";
         REPL._eInput.focus();
       });
+      break;
     }
   },
 
-  _i: [],
-  
-  ii: function(o) {
-    var s = '<table class="property_table">'
-    var v, vc;
+  iiiiii: function(o) {
+    switch (typeof o) {
+      case 'undefined':
+      var s = '<table class="property_table">';
+      var v, vc;
 
-    for (var k in o) {
-      try {
-        v = Object.inspect(o[k]);
-        vc = (typeof v == 'undefined' ? 'undefined' : 'inspect')
-      } catch(ex) {
-        v = Object.inspect(ex);
-        vc = 'error'
+      for (var k in o) {
+        try {
+          v = Object.inspect(o[k]);
+          vc = (typeof v == 'undefined' ? 'undefined' : 'property_value');
+        } catch(ex) {
+          v = Object.inspect(ex);
+          vc = 'error';
+        }
+
+        s += '<tr class="object_property">'+
+             '<td valign="top" class="object_key">'+k.escapeHTML()+
+             '</td><td class="object_value">'+v.escapeHTML()+
+             '</td></tr>';
       }
-
-      s += '<tr><td class="property_name">'+k.escapeHTML()+
-           '</td><td class="'+vc+'">'+v.escapeHTML()+'</td></tr>';
+        s += '</table>';
     }
-    s += '</table>';
     this.printRaw(s);
   },
   printException: function(e) {
-    this.printRaw(
-      '<span class="error_name">'+e.name+'</span>'+
-      '<span class="error_message">'+e.message+"</span>"+
-      '<table class="stack_trace">'+
-
-      e.stack.split(/\r?\n/).map(function(line) {
-        if (line.match(/\((.*)\)@(.*):([0-9]+)/)) {
-          return '<tr><td class="stack_line">'+RegExp.$3+'</td>'+
-                     '<td class="stack_file">'+RegExp.$2+'</td>'+
-                     '<td class="stack_object">'+RegExp.$1+'</td></tr>';
-        } else {
-          return '<tr><td colspan="3" class="stack_misc">'+line+'</td></tr>';
-        }
-      }).join('')+"</table>");
-
-    return this;
   },
   guarded: function (f,t) {
     var th = this;
@@ -269,7 +444,7 @@ REPL = {
       } catch(ex) {
         th.printException(ex);
       }
-    }
+    };
   },
   evalSilent: function(_stringToEvaluate,_objectInWhichToEvaluteIt) {
     return (function() {

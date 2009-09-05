@@ -51,28 +51,63 @@ body {
 }
 
 .repl .history { color: white; }
-.repl .inspect { display: block;
-                 color: #88f;
-                 margin: 5px 8px 5px 12px;
-                 cursor: pointer; }
-.repl .undefined { display: block;
-                   color: #448;
-                   margin: 5px 8px 5px 12px;}
 .repl .status { color: #8f8; }
-.repl .error { color: #f88; }
-.repl .error_name { display: block;
-                    background-color: red;
-                    color: white;
-                    font-weight: bold;
-                    padding: 2px;
-                    margin: 8px 0 0 0; }
-.repl .error_message { display: block; font-style: italic; color: #bbb; margin: 8px; }
-.repl .stack_trace { border: 0px; }
-.repl .stack_trace td { padding: 0px 8px 0px 8px; margin: 0; }
-.repl .stack_object { color: #88f; }
-.repl .stack_file { color: #ff8; }
-.repl .stack_line { color: #8f8; }
+.repl .scrollable { display: block;
+                    width: 90%;
+                    overflow: auto; }
 
-.repl .property_table { border: 0px; }
-.repl .property_name { color: #ff8; }
-.repl .property_value { color: #888; }
+.repl .inspect                   { color: #888;           
+                                   cursor: pointer; }     
+.repl .inspect_toplevel          { display: block;
+                                   padding: 12px; }
+.repl .inspect .undefined        { color: #448; }
+.repl .inspect .null             { color: #884; }
+.repl .inspect .true             { color: #8f8; }
+.repl .inspect .false            { color: #f88; }
+.repl .inspect .number           { color: #8cc; }
+.repl .inspect .string           { color: #cc8; }
+.repl .inspect .function         { color: #88c; white-space: pre-wrap; }
+.repl .inspect .array            { color: #888; }
+
+.repl .inspect .object_table     { border: 1px solid #444; }
+.repl .inspect .object_row       {}
+.repl .inspect .object_key       { color: #cc8; padding: 6px 16px 6px 6px; text-align: right; }
+.repl .inspect .object_value     { padding: 6px 6px 6px 6px; }
+
+.repl .inspect .dom                           { color: #666; }
+.repl .inspect .dom .tag_name                 { color: #996; }
+.repl .inspect .dom .tag_body                 { display: block; margin: 0px 0px 0px 1em; }
+.repl .inspect .dom .attribute_name           { color: #966; }
+.repl .inspect .dom .attribute_value          { color: #699; }
+.repl .inspect .dom .text                     { color: #aaa; }
+.repl .inspect .dom .comment                  { color: #555; font-style: italic; }
+.repl .inspect .dom .processing_instruction   { color: #969; font-weight: bold; }
+
+.repl .error            { color: #b55; }
+.repl .error_name       { display: block;
+                          background-color: #822;
+                          color: white;
+                          font-weight: bold;
+                          padding: 2px;
+                          margin: 8px 0 0 0; }
+.repl .error_message    { display: block;
+                          font-style: italic;
+                          color: #bbb;
+                          margin: 8px; }
+.repl .stack_trace      { border: 0px; }
+.repl .stack_trace td   { padding: 0px 8px 0px 8px;
+                          margin: 0; }
+.repl .stack_object     { color: #669; }
+.repl .stack_file       { color: #996; }
+.repl .stack_line       { color: #696; }
+
+.repl .property_table { border: 0px; margin: 0px; padding: 0px; }
+/*.repl .property_row   { margin: 20px 0px 20px 0px; }*/
+.repl .property_name  { color: #ff8;
+                        margin: 0px;
+                        padding: 6px 16px 0px 0px;
+                        text-align: right; }
+.repl .property_value { color: #888;
+                        margin: 0px;
+                        padding: 6px 0px 0px 0px;
+                        font-size: 11px; }
