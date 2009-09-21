@@ -317,8 +317,8 @@ REPL = {
   },
   clear: function() {
     this._eOutput.update('');
-    this._i.length = 0;
-    return {inspect:function(){ return '' }};
+    this.value.length = 0;
+    return 'OK';
   },
 
   _selfClosingTags: { area:true,
