@@ -626,7 +626,7 @@ REPL = {
   // Nasty infinite loop/recursion bugs tend to pop up with these inspection functions
   // so this paranoid counter-measure is in place to prevent infuriating freezes,
   // at least until the code is more mature.
-  _FREEZE_GUARD_MAX_COUNT: 10000,
+  _FREEZE_GUARD_MAX_COUNT: 100000,
   _freezeGuardCounter: 0,
   _freezeGuardReset: function() {
     this._freezeGuardCounter = this._FREEZE_GUARD_MAX_COUNT;
